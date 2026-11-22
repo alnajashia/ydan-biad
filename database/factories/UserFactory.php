@@ -2,6 +2,10 @@
 
 namespace Database\Factories;
 
+use App\Features\Users\Domain\Enums\Gender;
+use App\Features\Users\Domain\Enums\IdentityType;
+use App\Features\Users\Domain\Enums\UserRole;
+use App\Features\Users\Domain\Enums\UserStatus;
 use App\Features\Users\Infrastructure\Persistence\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
@@ -32,21 +36,27 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => fake()->name(),
-            'email' => fake()->unique()->safeEmail(),
-            'email_verified_at' => now(),
+            'full_name' => fake()->name(),
+            'phone' => fake()->unique()->numerify('7########'),
             'password' => static::$password ??= Hash::make('password'),
+            'gender' => fake()->randomElement(Gender::cases()),
+            'status' => UserStatus::Active,
+            'identity_type' => fake()->randomElement(IdentityType::cases()),
+            'identity_number' => fake()->unique()->numerify('##########'),
+            'identity_expiry_date' => fake()->dateTimeBetween('+1 year', '+5 years')->format('Y-m-d'),
+            'account_verified_at' => now(),
+            'role' => UserRole::Customer,
             'remember_token' => Str::random(10),
         ];
     }
 
     /**
-     * Indicate that the model's email address should be unverified.
+     * Indicate that the user's account should be unverified.
      */
     public function unverified(): static
     {
         return $this->state(fn (array $attributes) => [
-            'email_verified_at' => null,
+            'account_verified_at' => null,
         ]);
     }
 }
