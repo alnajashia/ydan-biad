@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Features\Users\Infrastructure\Persistence\Models\Customer;
+use App\Features\Customers\Infrastructure\Persistence\Models\Customer;
 use App\Features\Users\Infrastructure\Persistence\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 

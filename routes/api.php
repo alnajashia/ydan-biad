@@ -1,7 +1,7 @@
 <?php
 
+use App\Features\Customers\Presentation\Http\Controllers\CustomerController;
 use App\Features\Users\Presentation\Http\Controllers\AuthController;
-use App\Features\Users\Presentation\Http\Controllers\CustomerController;
 use App\Features\Users\Presentation\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
