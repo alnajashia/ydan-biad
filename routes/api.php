@@ -1,6 +1,8 @@
 <?php
 
 use App\Features\Customers\Presentation\Http\Controllers\CustomerController;
+use App\Features\Lookups\Presentation\Http\Controllers\RoleController;
+use App\Features\Lookups\Presentation\Http\Controllers\StatusController;
 use App\Features\Users\Presentation\Http\Controllers\AuthController;
 use App\Features\Users\Presentation\Http\Controllers\UserController;
 use Illuminate\Http\Request;
@@ -17,4 +19,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::apiResource('users', UserController::class);
     Route::apiResource('customers', CustomerController::class);
+    Route::apiResource('statuses', StatusController::class);
+    Route::apiResource('roles', RoleController::class);
 });
