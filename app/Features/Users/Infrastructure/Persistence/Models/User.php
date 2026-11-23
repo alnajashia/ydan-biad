@@ -2,6 +2,7 @@
 
 namespace App\Features\Users\Infrastructure\Persistence\Models;
 
+use App\Features\Customers\Infrastructure\Persistence\Models\Customer;
 use App\Features\Users\Domain\Enums\Gender;
 use App\Features\Users\Domain\Enums\IdentityType;
 use App\Features\Users\Domain\Enums\UserRole;

@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Features\Users\Infrastructure\Persistence\Models;
+namespace App\Features\Customers\Infrastructure\Persistence\Models;
 
+use App\Features\Users\Infrastructure\Persistence\Models\User;
 use Database\Factories\CustomerFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;

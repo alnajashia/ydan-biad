@@ -2,6 +2,7 @@
 
 namespace App\Features\Users\Presentation\Http\Resources;
 
+use App\Features\Customers\Presentation\Http\Resources\CustomerResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 

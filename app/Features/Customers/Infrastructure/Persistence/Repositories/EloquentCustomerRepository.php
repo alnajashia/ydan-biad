@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Features\Users\Infrastructure\Persistence\Repositories;
+namespace App\Features\Customers\Infrastructure\Persistence\Repositories;
 
-use App\Features\Users\Domain\Repositories\CustomerRepositoryInterface;
-use App\Features\Users\Infrastructure\Persistence\Models\Customer;
+use App\Features\Customers\Domain\Repositories\CustomerRepositoryInterface;
+use App\Features\Customers\Infrastructure\Persistence\Models\Customer;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class EloquentCustomerRepository implements CustomerRepositoryInterface

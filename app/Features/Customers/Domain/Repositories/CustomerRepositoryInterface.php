@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Features\Users\Domain\Repositories;
+namespace App\Features\Customers\Domain\Repositories;
 
-use App\Features\Users\Infrastructure\Persistence\Models\Customer;
+use App\Features\Customers\Infrastructure\Persistence\Models\Customer;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 interface CustomerRepositoryInterface

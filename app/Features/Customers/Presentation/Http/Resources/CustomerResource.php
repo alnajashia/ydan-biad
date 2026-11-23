@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Features\Users\Presentation\Http\Resources;
+namespace App\Features\Customers\Presentation\Http\Resources;
 
+use App\Features\Users\Presentation\Http\Resources\UserResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 

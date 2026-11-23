@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Features\Users\Presentation\Http\Requests;
+namespace App\Features\Customers\Presentation\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class UpdateCustomerRequest extends FormRequest
+class StoreCustomerRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -17,10 +17,8 @@ class UpdateCustomerRequest extends FormRequest
      */
     public function rules(): array
     {
-        $customerId = $this->route('customer');
-
         return [
-            'user_id' => ['sometimes', 'integer', Rule::exists('users', 'id'), Rule::unique('customers', 'user_id')->ignore($customerId)],
+            'user_id' => ['required', 'integer', Rule::exists('users', 'id'), Rule::unique('customers', 'user_id')],
             'phone_verification_code' => ['nullable', 'string', 'max:20'],
             'phone_verified_at' => ['nullable', 'date'],
             'verification_code_sent_at' => ['nullable', 'date'],

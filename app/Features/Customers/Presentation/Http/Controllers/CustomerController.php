@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Features\Users\Presentation\Http\Controllers;
+namespace App\Features\Customers\Presentation\Http\Controllers;
 
-use App\Features\Users\Application\Services\CustomerService;
-use App\Features\Users\Infrastructure\Persistence\Models\Customer;
-use App\Features\Users\Presentation\Http\Requests\StoreCustomerRequest;
-use App\Features\Users\Presentation\Http\Requests\UpdateCustomerRequest;
-use App\Features\Users\Presentation\Http\Resources\CustomerResource;
+use App\Features\Customers\Application\Services\CustomerService;
+use App\Features\Customers\Infrastructure\Persistence\Models\Customer;
+use App\Features\Customers\Presentation\Http\Requests\StoreCustomerRequest;
+use App\Features\Customers\Presentation\Http\Requests\UpdateCustomerRequest;
+use App\Features\Customers\Presentation\Http\Resources\CustomerResource;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;

@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Features\Users\Application\Services;
+namespace App\Features\Customers\Application\Services;
 
-use App\Features\Users\Domain\Repositories\CustomerRepositoryInterface;
-use App\Features\Users\Infrastructure\Persistence\Models\Customer;
+use App\Features\Customers\Domain\Repositories\CustomerRepositoryInterface;
+use App\Features\Customers\Infrastructure\Persistence\Models\Customer;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class CustomerService
