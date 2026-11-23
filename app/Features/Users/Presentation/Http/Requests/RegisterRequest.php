@@ -24,15 +24,15 @@ class RegisterRequest extends FormRequest
     {
         return [
             'full_name' => ['required', 'string', 'max:255'],
-            'phone' => ['required', 'string', 'max:30', Rule::unique('users', 'phone')],
+            'phone' => ['required', 'string', 'max:9', Rule::unique('users', 'phone')],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
-            'gender' => ['nullable', new Enum(Gender::class)],
-            'status' => ['nullable', new Enum(UserStatus::class)],
-            'identity_type' => ['nullable', new Enum(IdentityType::class)],
-            'identity_number' => ['nullable', 'string', 'max:100', Rule::unique('users', 'identity_number')],
-            'identity_front_image' => ['nullable', 'image', 'max:5120'],
-            'identity_back_image' => ['nullable', 'image', 'max:5120'],
-            'identity_expiry_date' => ['nullable', 'date'],
+            'gender' => ['required',new Enum(Gender::class)],
+            'status' => [new Enum(UserStatus::class)],
+            'identity_type' => [new Enum(IdentityType::class)],
+            'identity_number' => ['required','string', 'max:100', Rule::unique('users', 'identity_number')],
+            'identity_front_image' => [ 'image', 'max:5120','mimes:png,jpg,jpeg,webp'],
+            'identity_back_image' => ['image', 'max:5120','mimes:png,jpg,jpeg,webp'],
+            'identity_expiry_date' => ['required', 'date'],
             'role' => ['nullable', new Enum(UserRole::class)],
         ];
     }
