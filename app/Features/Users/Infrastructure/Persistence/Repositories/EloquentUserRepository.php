@@ -13,7 +13,7 @@ class EloquentUserRepository implements UserRepositoryInterface
      */
     public function create(array $data): User
     {
-        return User::query()->create($data)->load(['status', 'role']);
+        return User::query()->create($data);
     }
 
     /**
@@ -23,7 +23,7 @@ class EloquentUserRepository implements UserRepositoryInterface
     {
         $user->update($data);
 
-        return $user->refresh()->load(['status', 'role']);
+        return $user->refresh();
     }
 
     public function delete(User $user): bool
@@ -33,16 +33,16 @@ class EloquentUserRepository implements UserRepositoryInterface
 
     public function findById(int $id): ?User
     {
-        return User::query()->with(['customer', 'status', 'role'])->find($id);
+        return User::query()->with('customer')->find($id);
     }
 
     public function findByPhone(string $phone): ?User
     {
-        return User::query()->with(['status', 'role'])->where('phone', $phone)->first();
+        return User::query()->where('phone', $phone)->first();
     }
 
     public function paginate(int $perPage = 15): LengthAwarePaginator
     {
-        return User::query()->with(['customer', 'status', 'role'])->latest()->paginate($perPage);
+        return User::query()->with('customer')->latest()->paginate($perPage);
     }
 }

@@ -2,8 +2,6 @@
 
 namespace App\Features\Users\Application\Services;
 
-use App\Features\Lookups\Domain\Repositories\RoleRepositoryInterface;
-use App\Features\Lookups\Domain\Repositories\StatusRepositoryInterface;
 use App\Features\Users\Domain\Repositories\UserRepositoryInterface;
 use App\Features\Users\Infrastructure\Persistence\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -13,8 +11,6 @@ class UserService
 {
     public function __construct(
         private readonly UserRepositoryInterface $users,
-        private readonly StatusRepositoryInterface $statuses,
-        private readonly RoleRepositoryInterface $roles,
     ) {}
 
     public function paginate(int $perPage = 15): LengthAwarePaginator
@@ -32,7 +28,7 @@ class UserService
      */
     public function create(array $data): User
     {
-        return $this->users->create($this->storeIdentityImages($this->applyDefaults($data)));
+        return $this->users->create($this->storeIdentityImages($data));
     }
 
     /**
@@ -46,23 +42,6 @@ class UserService
     public function delete(User $user): bool
     {
         return $this->users->delete($user);
-    }
-
-    /**
-     * @param  array<string, mixed>  $data
-     * @return array<string, mixed>
-     */
-    private function applyDefaults(array $data): array
-    {
-        if (empty($data['status_id'])) {
-            $data['status_id'] = $this->statuses->findByName('active')?->id;
-        }
-
-        if (empty($data['role_id'])) {
-            $data['role_id'] = $this->roles->findByName('customer')?->id;
-        }
-
-        return $data;
     }
 
     /**
