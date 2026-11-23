@@ -17,14 +17,14 @@ return new class extends Migration
             $table->string('phone')->unique();
             $table->string('password');
             $table->string('gender')->nullable();
-            $table->string('status')->default('active');
+            $table->foreignId('status_id')->nullable()->constrained('statuses')->nullOnDelete();
             $table->string('identity_type')->nullable();
             $table->string('identity_number')->nullable()->unique();
             $table->string('identity_front_image')->nullable();
             $table->string('identity_back_image')->nullable();
             $table->date('identity_expiry_date')->nullable();
             $table->timestamp('account_verified_at')->nullable();
-            $table->string('role')->default('customer');
+            $table->foreignId('role_id')->nullable()->constrained('roles')->nullOnDelete();
             $table->rememberToken();
             $table->timestamps();
         });

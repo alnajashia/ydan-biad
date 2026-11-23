@@ -2,7 +2,8 @@
 
 namespace App\Features\Users\Application\Services;
 
-use App\Features\Users\Domain\Enums\UserStatus;
+use App\Features\Lookups\Domain\Repositories\RoleRepositoryInterface;
+use App\Features\Lookups\Domain\Repositories\StatusRepositoryInterface;
 use App\Features\Users\Domain\Repositories\UserRepositoryInterface;
 use App\Features\Users\Infrastructure\Persistence\Models\User;
 use Illuminate\Support\Facades\Hash;
@@ -12,6 +13,8 @@ class AuthService
 {
     public function __construct(
         private readonly UserRepositoryInterface $users,
+        private readonly StatusRepositoryInterface $statuses,
+        private readonly RoleRepositoryInterface $roles,
     ) {}
 
     /**
@@ -20,6 +23,14 @@ class AuthService
      */
     public function register(array $data): array
     {
+        if (empty($data['status_id'])) {
+            $data['status_id'] = $this->statuses->findByName('active')?->id;
+        }
+
+        if (empty($data['role_id'])) {
+            $data['role_id'] = $this->roles->findByName('customer')?->id;
+        }
+
         $user = $this->users->create($data);
 
         return [
@@ -43,7 +54,9 @@ class AuthService
             ]);
         }
 
-        if ($user->status !== UserStatus::Active) {
+        $status = $user->status;
+
+        if ($status === null || $status->name !== 'active' || $status->value !== true) {
             throw ValidationException::withMessages([
                 'phone' => ['This account is not active.'],
             ]);
