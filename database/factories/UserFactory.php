@@ -2,10 +2,10 @@
 
 namespace Database\Factories;
 
-use App\Features\Lookups\Infrastructure\Persistence\Models\Role;
-use App\Features\Lookups\Infrastructure\Persistence\Models\Status;
 use App\Features\Users\Domain\Enums\Gender;
 use App\Features\Users\Domain\Enums\IdentityType;
+use App\Features\Users\Domain\Enums\UserRole;
+use App\Features\Users\Domain\Enums\UserStatus;
 use App\Features\Users\Infrastructure\Persistence\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
@@ -40,12 +40,12 @@ class UserFactory extends Factory
             'phone' => fake()->unique()->numerify('7########'),
             'password' => static::$password ??= Hash::make('password'),
             'gender' => fake()->randomElement(Gender::cases()),
-            'status_id' => fn () => Status::query()->firstOrCreate(['name' => 'active'], ['value' => true])->id,
+            'status' => UserStatus::Active,
             'identity_type' => fake()->randomElement(IdentityType::cases()),
             'identity_number' => fake()->unique()->numerify('##########'),
             'identity_expiry_date' => fake()->dateTimeBetween('+1 year', '+5 years')->format('Y-m-d'),
             'account_verified_at' => now(),
-            'role_id' => fn () => Role::query()->firstOrCreate(['name' => 'customer'], ['value' => true])->id,
+            'role' => UserRole::Customer,
             'remember_token' => Str::random(10),
         ];
     }

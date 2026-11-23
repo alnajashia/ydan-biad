@@ -32,7 +32,7 @@ class UserController extends Controller
 
     public function show(User $user): JsonResponse
     {
-        return response()->json(['user' => new UserResource($user->load(['customer', 'status', 'role']))]);
+        return response()->json(['user' => new UserResource($user->load('customer'))]);
     }
 
     public function update(UpdateUserRequest $request, User $user): JsonResponse

@@ -2,16 +2,10 @@
 
 use App\Features\Customers\Infrastructure\Persistence\Models\Customer;
 use App\Features\Users\Infrastructure\Persistence\Models\User;
-use Database\Seeders\RoleSeeder;
-use Database\Seeders\StatusSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
 
 uses(RefreshDatabase::class);
-
-beforeEach(function () {
-    $this->seed([StatusSeeder::class, RoleSeeder::class]);
-});
 
 test('a user can register with a phone number and receives a token', function () {
     $response = $this->postJson('/api/register', [
@@ -26,9 +20,6 @@ test('a user can register with a phone number and receives a token', function ()
     $response->assertCreated()
         ->assertJsonPath('user.phone', '777123456')
         ->assertJsonPath('user.identity_type', 'national_id')
-        ->assertJsonPath('user.status.name', 'active')
-        ->assertJsonPath('user.status.value', true)
-        ->assertJsonPath('user.role.name', 'customer')
         ->assertJsonStructure(['user' => ['id', 'full_name', 'phone'], 'token']);
 
     $this->assertDatabaseHas('users', ['phone' => '777123456']);
@@ -85,10 +76,8 @@ test('an authenticated user can manage users and customers', function () {
         'full_name' => 'Managed User',
         'phone' => '777999888',
         'password' => 'password123',
-    ])->assertCreated()
-        ->assertJsonPath('user.status.name', 'active')
-        ->assertJsonPath('user.role.name', 'customer')
-        ->json('user');
+        'role' => 'customer',
+    ])->assertCreated()->json('user');
 
     $this->getJson('/api/users')->assertOk();
     $this->getJson("/api/users/{$created['id']}")->assertOk()
