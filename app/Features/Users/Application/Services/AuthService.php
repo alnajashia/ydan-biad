@@ -2,61 +2,55 @@
 
 namespace App\Features\Users\Application\Services;
 
-use App\Features\Users\Domain\Enums\UserStatus;
-use App\Features\Users\Domain\Repositories\UserRepositoryInterface;
-use App\Features\Users\Infrastructure\Persistence\Models\User;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
+use App\Features\Users\Application\DTOs\LoginDTO;
+use App\Features\Users\Application\DTOs\RegisterUserDTO;
+use App\Features\Users\Application\UseCases\LoginUserUseCase;
+use App\Features\Users\Application\UseCases\LogoutUserUseCase;
+use App\Features\Users\Application\UseCases\RefreshTokenUseCase;
+use App\Features\Users\Application\UseCases\RegisterUserUseCase;
+use App\Features\Users\Domain\Entities\UserEntity;
 
 class AuthService
 {
     public function __construct(
-        private readonly UserRepositoryInterface $users,
+        private readonly RegisterUserUseCase $registerUser,
+        private readonly LoginUserUseCase $loginUser,
+        private readonly LogoutUserUseCase $logoutUser,
+        private readonly RefreshTokenUseCase $refreshToken,
+        private readonly TokenService $tokens,
     ) {}
 
-    /**
-     * @param  array<string, mixed>  $data
-     * @return array{user: User, token: string}
-     */
-    public function register(array $data): array
+    public function register(RegisterUserDTO $dto): UserEntity
     {
-        $user = $this->users->create($data);
-
-        return [
-            'user' => $user,
-            'token' => $user->createToken('api')->plainTextToken,
-        ];
+        return $this->registerUser->execute($dto);
     }
 
     /**
-     * @return array{user: User, token: string}
-     *
-     * @throws ValidationException
+     * @return array{user: UserEntity, access_token: string, refresh_token: string, token_type: string, expires_in: int}
      */
-    public function login(string $phone, string $password): array
+    public function login(LoginDTO $dto): array
     {
-        $user = $this->users->findByPhone($phone);
-
-        if ($user === null || ! Hash::check($password, $user->password)) {
-            throw ValidationException::withMessages([
-                'phone' => ['The provided credentials are incorrect.'],
-            ]);
-        }
-
-        if ($user->status !== UserStatus::Active) {
-            throw ValidationException::withMessages([
-                'phone' => ['This account is not active.'],
-            ]);
-        }
-
-        return [
-            'user' => $user,
-            'token' => $user->createToken('api')->plainTextToken,
-        ];
+        return $this->loginUser->execute($dto);
     }
 
-    public function logout(User $user): void
+    public function logout(?int $accessTokenId): void
     {
-        $user->currentAccessToken()?->delete();
+        $this->logoutUser->execute($accessTokenId);
+    }
+
+    /**
+     * @return array{user: UserEntity, access_token: string, refresh_token: string, token_type: string, expires_in: int}
+     */
+    public function refresh(string $plainToken): array
+    {
+        return $this->refreshToken->execute($plainToken);
+    }
+
+    /**
+     * Log the user out of every device: all access and refresh tokens.
+     */
+    public function logoutEverywhere(int $userId): void
+    {
+        $this->tokens->revokeAllSessions($userId);
     }
 }

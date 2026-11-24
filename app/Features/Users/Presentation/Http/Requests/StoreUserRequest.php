@@ -6,6 +6,8 @@ use App\Features\Users\Domain\Enums\Gender;
 use App\Features\Users\Domain\Enums\IdentityType;
 use App\Features\Users\Domain\Enums\UserRole;
 use App\Features\Users\Domain\Enums\UserStatus;
+use App\Features\Users\Domain\ValueObjects\PhoneNumber;
+use App\Features\Users\Presentation\Http\Rules\PhoneNumberRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Enum;
@@ -17,22 +19,29 @@ class StoreUserRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('phone')) {
+            $this->merge(['phone' => PhoneNumber::normalize((string) $this->input('phone'))]);
+        }
+    }
+
     /**
      * @return array<string, mixed>
      */
     public function rules(): array
     {
         return [
-            'full_name' => ['required', 'string', 'max:255'],
-            'phone' => ['required', 'string', 'max:30', Rule::unique('users', 'phone')],
+            'full_name' => ['required', 'string', 'max:255', Rule::unique('users', 'full_name')],
+            'phone' => ['required', 'string', new PhoneNumberRule, Rule::unique('users', 'phone')],
             'password' => ['required', 'string', 'min:8'],
-            'gender' => ['nullable', new Enum(Gender::class)],
+            'gender' => ['required', new Enum(Gender::class)],
             'status' => ['nullable', new Enum(UserStatus::class)],
-            'identity_type' => ['nullable', new Enum(IdentityType::class)],
-            'identity_number' => ['nullable', 'string', 'max:100', Rule::unique('users', 'identity_number')],
-            'identity_front_image' => ['nullable', 'image', 'max:5120'],
-            'identity_back_image' => ['nullable', 'image', 'max:5120'],
-            'identity_expiry_date' => ['nullable', 'date'],
+            'identity_type' => ['required', new Enum(IdentityType::class)],
+            'identity_number' => ['required', 'string', 'max:100', Rule::unique('users', 'identity_number')],
+            'identity_front_image' => ['required', 'image', 'max:5120', 'mimes:png,jpg,jpeg,webp'],
+            'identity_back_image' => ['required', 'image', 'max:5120', 'mimes:png,jpg,jpeg,webp'],
+            'identity_expiry_date' => ['required', 'date'],
             'account_verified_at' => ['nullable', 'date'],
             'role' => ['nullable', new Enum(UserRole::class)],
         ];

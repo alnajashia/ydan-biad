@@ -2,44 +2,51 @@
 
 namespace App\Features\Customers\Application\Services;
 
-use App\Features\Customers\Domain\Repositories\CustomerRepositoryInterface;
-use App\Features\Customers\Infrastructure\Persistence\Models\Customer;
+use App\Features\Customers\Application\DTOs\CreateCustomerDTO;
+use App\Features\Customers\Application\DTOs\UpdateCustomerDTO;
+use App\Features\Customers\Application\UseCases\CreateCustomerUseCase;
+use App\Features\Customers\Application\UseCases\DeleteCustomerUseCase;
+use App\Features\Customers\Application\UseCases\GetCustomerUseCase;
+use App\Features\Customers\Application\UseCases\ListCustomersUseCase;
+use App\Features\Customers\Application\UseCases\UpdateCustomerUseCase;
+use App\Features\Customers\Domain\Entities\CustomerEntity;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class CustomerService
 {
     public function __construct(
-        private readonly CustomerRepositoryInterface $customers,
+        private readonly ListCustomersUseCase $listCustomers,
+        private readonly GetCustomerUseCase $getCustomer,
+        private readonly CreateCustomerUseCase $createCustomer,
+        private readonly UpdateCustomerUseCase $updateCustomer,
+        private readonly DeleteCustomerUseCase $deleteCustomer,
     ) {}
 
+    /**
+     * @return LengthAwarePaginator<int, CustomerEntity>
+     */
     public function paginate(int $perPage = 15): LengthAwarePaginator
     {
-        return $this->customers->paginate($perPage);
+        return $this->listCustomers->execute($perPage);
     }
 
-    public function find(int $id): ?Customer
+    public function find(int $id): ?CustomerEntity
     {
-        return $this->customers->findById($id);
+        return $this->getCustomer->execute($id);
     }
 
-    /**
-     * @param  array<string, mixed>  $data
-     */
-    public function create(array $data): Customer
+    public function create(CreateCustomerDTO $dto): CustomerEntity
     {
-        return $this->customers->create($data);
+        return $this->createCustomer->execute($dto);
     }
 
-    /**
-     * @param  array<string, mixed>  $data
-     */
-    public function update(Customer $customer, array $data): Customer
+    public function update(CustomerEntity $customer, UpdateCustomerDTO $dto): CustomerEntity
     {
-        return $this->customers->update($customer, $data);
+        return $this->updateCustomer->execute($customer, $dto);
     }
 
-    public function delete(Customer $customer): bool
+    public function delete(CustomerEntity $customer): bool
     {
-        return $this->customers->delete($customer);
+        return $this->deleteCustomer->execute($customer);
     }
 }

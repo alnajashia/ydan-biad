@@ -1,20 +1,31 @@
 <?php
 
 use App\Features\Customers\Presentation\Http\Controllers\CustomerController;
+use App\Features\Users\Domain\Entities\UserEntity;
 use App\Features\Users\Presentation\Http\Controllers\AuthController;
 use App\Features\Users\Presentation\Http\Controllers\UserController;
+use App\Features\Users\Presentation\Http\Resources\UserResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
+Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:10,1');
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
+Route::post('/auth/refresh', [AuthController::class, 'refresh'])->middleware('throttle:5,1');
 
 Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/user', function (Request $request) {
-        return $request->user();
-    });
-    Route::get('/me', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
-    Route::apiResource('users', UserController::class);
-    Route::apiResource('customers', CustomerController::class);
+    Route::post('/logout-all', [AuthController::class, 'logoutEverywhere']);
+
+    Route::middleware('account.active')->group(function () {
+        Route::get('/user', function (Request $request) {
+            return new UserResource(UserEntity::fromModel($request->user()->load('customer')));
+        });
+        Route::get('/me', [AuthController::class, 'me']);
+        Route::middleware('role:admin')->group(function () {
+            Route::apiResource('users', UserController::class);
+            Route::patch('/users/{user}/activate', [UserController::class, 'activate']);
+            Route::patch('/users/{user}/suspend', [UserController::class, 'suspend']);
+        });
+        Route::apiResource('customers', CustomerController::class);
+    });
 });

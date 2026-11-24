@@ -13,23 +13,36 @@
 app/Features/Users/
 ├── Domain/
 │   ├── Enums/            Gender, UserStatus, IdentityType, UserRole
-│   └── Repositories/     UserRepositoryInterface
+│   ├── Entities/         UserEntity, RefreshTokenEntity
+│   ├── ValueObjects/     PhoneNumber
+│   └── Repositories/     UserRepositoryInterface, RefreshTokenRepositoryInterface
 ├── Application/
-│   ├── DTOs/             RegisterUserDTO
-│   └── Services/         AuthService, UserService
+│   ├── DTOs/             RegisterUserDTO, LoginDTO, CreateUserDTO, UpdateUserDTO
+│   ├── UseCases/         RegisterUser, LoginUser, LogoutUser, RefreshToken,
+│   │                     ListUsers, GetUser, CreateUser, UpdateUser, DeleteUser
+│   └── Services/         AuthService, UserService, TokenService
 ├── Infrastructure/
 │   ├── Persistence/
-│   │   ├── Models/       User
-│   │   └── Repositories/ EloquentUserRepository
+│   │   ├── Models/       User, RefreshToken
+│   │   └── Repositories/ EloquentUserRepository, EloquentRefreshTokenRepository
 │   └── Providers/        UsersServiceProvider
 └── Presentation/Http/
     ├── Controllers/      AuthController, UserController
-    ├── Requests/         RegisterRequest, LoginRequest, StoreUserRequest, UpdateUserRequest
+    ├── Requests/         RegisterRequest, LoginRequest, RefreshTokenRequest,
+    │                     StoreUserRequest, UpdateUserRequest
+    ├── Rules/            PhoneNumberRule
     └── Resources/        UserResource
 
 app/Features/Customers/
-├── Domain/Repositories/          CustomerRepositoryInterface
-├── Application/Services/         CustomerService
+├── Domain/
+│   ├── Entities/         CustomerEntity
+│   ├── ValueObjects/     Coordinates
+│   └── Repositories/     CustomerRepositoryInterface
+├── Application/
+│   ├── DTOs/             CreateCustomerDTO, UpdateCustomerDTO
+│   ├── UseCases/         ListCustomers, GetCustomer, CreateCustomer,
+│   │                     UpdateCustomer, DeleteCustomer
+│   └── Services/         CustomerService
 ├── Infrastructure/
 │   ├── Persistence/
 │   │   ├── Models/       Customer
@@ -38,6 +51,9 @@ app/Features/Customers/
 └── Presentation/Http/
     ├── Controllers/      CustomerController
     ├── Requests/         StoreCustomerRequest, UpdateCustomerRequest
+    └── Resources/        CustomerResource
+
+app/Http/Middleware/      EnsureRole, EnsureAccountActive
     └── Resources/        CustomerResource
 
 routes/api.php                  كل روابط الـ API
@@ -402,4 +418,65 @@ readonly class RegisterUserDTO
 
 ---
 
-*آخر تحديث: يطابق الكود المدموج على `main` (commit `02e4b05`) — ميزتا Users و Customers منفصلتان ومترابطتان بالعلاقات.*
+## 15. التحديث: Clean Architecture الصارم + الأمان (2026-11-24)
+
+> **ملاحظة:** الأقسام التي تشرح `AuthService` و `UserService` و `CustomerService` سطراً بسطر تصف التنفيذ القديم (خدمات تمرّر للـ Repository مباشرة). الخدمات الآن موجودة لكنها تنسّق الـ UseCases (انظر 15.1): الكنترولر ينادي الخدمة، والخدمة تنادي الـ UseCase، والـ UseCase ينادي الـ Repository. باقي الأقسام (الموديلات، الـ Enums، الـ Requests، الـ Resources) ما زالت صحيحة مع تعديلات بسيطة موضّحة هنا.
+
+### 15.1 لماذا لم تبقَ المجلدات فارغة؟
+
+المجلدات الفارغة (`.gitkeep`) كانت هياكل بلا تنفيذ. في الـ Clean Architecture الصارم كل طبقة لها دور حقيقي:
+
+| الطبقة | الدور | أمثلة |
+|---|---|---|
+| **DTOs** | نقل البيانات المُتحقَّق منها بين الطبقات بأنواع صارمة | `RegisterUserDTO` (بدل المصفوفة القديمة)، `LoginDTO`، `CreateUserDTO`، `UpdateUserDTO` |
+| **ValueObjects** | قيم لها قواعدها الخاصة وتتحقق من نفسها عند البناء | `PhoneNumber` (9 أرقام تبدأ بـ 7، يطبّع `+967` و `0`)، `Coordinates` (خطوط العرض/الطول ضمن المدى) |
+| **Entities** | كائنات النطاق: الحالة + قواعد العمل، بلا أي اعتماد على Eloquent | `UserEntity::canAuthenticate()` (الحساب النشط فقط)، `RefreshTokenEntity::isValid()` |
+| **UseCases** | عملية واحدة = كلاس واحد في Application | `LoginUserUseCase`، `RegisterUserUseCase`، `RefreshTokenUseCase`... |
+| **Services** | تنسيق عمليات الميزة: كل خدمة تجمع عدة UseCases | `AuthService` (تسجيل/دخول/خروج/تحديث/خروج من كل الأجهزة)، `UserService` (إدارة + تفعيل/إيقاف)، `CustomerService` |
+
+الموديل (Eloquent) يبقى في Infrastructure؛ الـ Entity هو تمثيل النطاق، والـ Repository يحوّل بينهما (`fromModel`).
+
+### 15.2 تدفق الطلب الجديد (مثال: تسجيل الدخول)
+
+1. `LoginRequest` يطبّع الهاتف (`prepareForValidation`) ويتحقق منه.
+2. `LoginDTO::fromRequest` يبني `PhoneNumber` وكلمة المرور.
+3. `AuthController` ينادي `AuthService::login`، والخدمة تنادي `LoginUserUseCase`.
+4. الـ UseCase ينادي `findByCredentials` — كلمة المرور تُفحص داخل الـ Repository فقط، والـ Entity لا يحمل الهاش أبداً.
+5. إن كان الحساب غير نشط يُرفض بـ `422` ورسالة `This account is not active.`.
+6. `TokenService::issuePair` يصدر زوج التوكنات: Access Token (ساعة) + Refresh Token (30 يوماً، مخزَّن هاش SHA-256 فقط).
+
+### 15.3 الأمان
+
+- **Access Token قصير العمر:** `config/sanctum.php` — `expiration = 60` دقيقة (كان `null` = لا ينتهي أبداً).
+- **Refresh Token مع تدوير (Rotation):** كل استخدام يلغي القديم ويصدر زوجاً جديداً، ويلغي الـ Access Token القديم معه. إعادة استخدام توكن قديم تُرفض.
+- **تسجيل الخروج يلغي الجلسة كاملة:** الـ Access Token يُحذف والـ Refresh Token المرتبط به يُلغى. وحذف المستخدم يلغي كل توكناته وصوره.
+- **حذف المستخدم ينظّف كل شيء:** توكنات Sanctum + صور الهوية من التخزين (توكنات التحديث تُحذف تلقائياً بـ `cascadeOnDelete`).
+- **حماية من التخمين (Rate Limit):** تسجيل الدخول وتحديث التوكن `throttle:5,1`، والتسجيل `throttle:10,1`.
+- **صلاحيات:** `role:admin` على كل مسارات `/api/users` (إدارة المستخدمين للأدمن فقط). المستخدم التجريبي `777000000` صار أدمن.
+- **الحساب الموقوف لا يستخدم الـ API:** ميدلوير `account.active` على كل المسارات المحمية — حتى لو كان التوكن ما زال سارياً.
+- **التسجيل لا يمنح صلاحيات:** `status` و `role` أُزيلا من `RegisterRequest` نهائياً — كان أي شخص يستطيع التسجيل كأدمن. الحساب الجديد يبدأ `suspended` و `customer`، والتسجيل لا يرجع توكن.
+- **الهاتف موحّد:** `PhoneNumber` يطبّع `+967777123456` و `0777123456` إلى `777123456` قبل التحقق والتخزين.
+
+### 15.4 المسارات (19)
+
+| المسار | الحماية |
+|---|---|
+| `POST /api/register` | عام + throttle |
+| `POST /api/login` | عام + throttle |
+| `POST /api/auth/refresh` | عام + throttle |
+| `POST /api/logout` | `auth:sanctum` |
+| `POST /api/logout-all` | `auth:sanctum` (يلغي كل الجلسات) |
+| `GET /api/me` ، `GET /api/user` | `auth:sanctum` + حساب نشط |
+| `apiResource /api/users` | `auth:sanctum` + حساب نشط + `role:admin` |
+| `PATCH /api/users/{user}/activate` | `auth:sanctum` + حساب نشط + `role:admin` |
+| `PATCH /api/users/{user}/suspend` | `auth:sanctum` + حساب نشط + `role:admin` |
+| `apiResource /api/customers` | `auth:sanctum` + حساب نشط |
+
+### 15.5 الاختبارات
+
+- **26 اختباراً ناجحاً (99 تأكيداً):** 13 اختبار Users API (منها تفعيل/إيقاف المستخدم) + 8 اختبارات أمن (تدوير التوكن، إلغاء الجلسة، الخروج من كل الأجهزة، صلاحيات الأدمن، الحساب الموقوف، انتهاء التوكن) + 3 اختبارات Unit للـ ValueObjects + مثالان.
+- `php artisan test` ثم `php vendor/bin/pint --dirty` قبل أي رفع.
+
+---
+
+*آخر تحديث: يطابق فرع `feature/strict-clean-architecture-security` — البنية الصارمة الكاملة (DTOs + ValueObjects + Entities + UseCases + Services المنسّقة) مع نظام التوكنات المزدوج والـ middlewares. الـ main ما زال على `b723fc9` حتى دمج الـ PR.*
