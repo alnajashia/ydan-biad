@@ -155,3 +155,29 @@ test('a customer profile is unique per user', function () {
         'user_id' => $customer->user_id,
     ])->assertUnprocessable()->assertJsonValidationErrors('user_id');
 });
+
+test('an admin can activate a suspended user so they can log in', function () {
+    Sanctum::actingAs(User::factory()->admin()->create());
+    $user = User::factory()->suspended()->create(['phone' => '777111222']);
+
+    $this->patchJson("/api/users/{$user->id}/activate")
+        ->assertOk()->assertJsonPath('user.status', 'active');
+
+    $this->postJson('/api/login', [
+        'phone' => '777111222',
+        'password' => 'password',
+    ])->assertOk();
+});
+
+test('an admin can suspend an active user so they cannot log in', function () {
+    Sanctum::actingAs(User::factory()->admin()->create());
+    $user = User::factory()->create(['phone' => '777111222']);
+
+    $this->patchJson("/api/users/{$user->id}/suspend")
+        ->assertOk()->assertJsonPath('user.status', 'suspended');
+
+    $this->postJson('/api/login', [
+        'phone' => '777111222',
+        'password' => 'password',
+    ])->assertUnprocessable();
+});

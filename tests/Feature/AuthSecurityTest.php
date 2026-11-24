@@ -82,6 +82,24 @@ test('logout revokes the session so both tokens stop working', function () {
         ->getJson('/api/me')->assertUnauthorized();
 });
 
+test('logout everywhere revokes all sessions', function () {
+    User::factory()->create(['phone' => '777123456']);
+    $first = loginAs();
+    $second = loginAs();
+
+    $this->withHeaders(['Authorization' => 'Bearer '.$first['access_token']])
+        ->postJson('/api/logout-all')->assertOk();
+
+    $this->postJson('/api/auth/refresh', [
+        'refresh_token' => $second['refresh_token'],
+    ])->assertUnprocessable();
+
+    $this->app['auth']->forgetGuards();
+
+    $this->withHeaders(['Authorization' => 'Bearer '.$second['access_token']])
+        ->getJson('/api/me')->assertUnauthorized();
+});
+
 test('a suspended account cannot use protected routes', function () {
     Sanctum::actingAs(User::factory()->suspended()->create());
 

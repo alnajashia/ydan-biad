@@ -20,7 +20,7 @@ app/Features/Users/
 │   ├── DTOs/             RegisterUserDTO, LoginDTO, CreateUserDTO, UpdateUserDTO
 │   ├── UseCases/         RegisterUser, LoginUser, LogoutUser, RefreshToken,
 │   │                     ListUsers, GetUser, CreateUser, UpdateUser, DeleteUser
-│   └── Services/         TokenService
+│   └── Services/         AuthService, UserService, TokenService
 ├── Infrastructure/
 │   ├── Persistence/
 │   │   ├── Models/       User, RefreshToken
@@ -40,8 +40,9 @@ app/Features/Customers/
 │   └── Repositories/     CustomerRepositoryInterface
 ├── Application/
 │   ├── DTOs/             CreateCustomerDTO, UpdateCustomerDTO
-│   └── UseCases/         ListCustomers, GetCustomer, CreateCustomer,
-│                         UpdateCustomer, DeleteCustomer
+│   ├── UseCases/         ListCustomers, GetCustomer, CreateCustomer,
+│   │                     UpdateCustomer, DeleteCustomer
+│   └── Services/         CustomerService
 ├── Infrastructure/
 │   ├── Persistence/
 │   │   ├── Models/       Customer
@@ -419,7 +420,7 @@ readonly class RegisterUserDTO
 
 ## 15. التحديث: Clean Architecture الصارم + الأمان (2026-11-24)
 
-> **ملاحظة:** الأقسام التي تشرح `AuthService` و `UserService` و `CustomerService` سطراً بسطر تصف البنية القديمة. هذه الخدمات حُذفت واستُبدلت بالـ UseCases أدناه. باقي الأقسام (الموديلات، الـ Enums، الـ Requests، الـ Resources) ما زالت صحيحة مع تعديلات بسيطة موضّحة هنا.
+> **ملاحظة:** الأقسام التي تشرح `AuthService` و `UserService` و `CustomerService` سطراً بسطر تصف التنفيذ القديم (خدمات تمرّر للـ Repository مباشرة). الخدمات الآن موجودة لكنها تنسّق الـ UseCases (انظر 15.1): الكنترولر ينادي الخدمة، والخدمة تنادي الـ UseCase، والـ UseCase ينادي الـ Repository. باقي الأقسام (الموديلات، الـ Enums، الـ Requests، الـ Resources) ما زالت صحيحة مع تعديلات بسيطة موضّحة هنا.
 
 ### 15.1 لماذا لم تبقَ المجلدات فارغة؟
 
@@ -431,6 +432,7 @@ readonly class RegisterUserDTO
 | **ValueObjects** | قيم لها قواعدها الخاصة وتتحقق من نفسها عند البناء | `PhoneNumber` (9 أرقام تبدأ بـ 7، يطبّع `+967` و `0`)، `Coordinates` (خطوط العرض/الطول ضمن المدى) |
 | **Entities** | كائنات النطاق: الحالة + قواعد العمل، بلا أي اعتماد على Eloquent | `UserEntity::canAuthenticate()` (الحساب النشط فقط)، `RefreshTokenEntity::isValid()` |
 | **UseCases** | عملية واحدة = كلاس واحد في Application | `LoginUserUseCase`، `RegisterUserUseCase`، `RefreshTokenUseCase`... |
+| **Services** | تنسيق عمليات الميزة: كل خدمة تجمع عدة UseCases | `AuthService` (تسجيل/دخول/خروج/تحديث/خروج من كل الأجهزة)، `UserService` (إدارة + تفعيل/إيقاف)، `CustomerService` |
 
 الموديل (Eloquent) يبقى في Infrastructure؛ الـ Entity هو تمثيل النطاق، والـ Repository يحوّل بينهما (`fromModel`).
 
@@ -438,9 +440,10 @@ readonly class RegisterUserDTO
 
 1. `LoginRequest` يطبّع الهاتف (`prepareForValidation`) ويتحقق منه.
 2. `LoginDTO::fromRequest` يبني `PhoneNumber` وكلمة المرور.
-3. `LoginUserUseCase` ينادي `findByCredentials` — كلمة المرور تُفحص داخل الـ Repository فقط، والـ Entity لا يحمل الهاش أبداً.
-4. إن كان الحساب غير نشط يُرفض بـ `422` ورسالة `This account is not active.`.
-5. `TokenService::issuePair` يصدر زوج التوكنات: Access Token (ساعة) + Refresh Token (30 يوماً، مخزَّن هاش SHA-256 فقط).
+3. `AuthController` ينادي `AuthService::login`، والخدمة تنادي `LoginUserUseCase`.
+4. الـ UseCase ينادي `findByCredentials` — كلمة المرور تُفحص داخل الـ Repository فقط، والـ Entity لا يحمل الهاش أبداً.
+5. إن كان الحساب غير نشط يُرفض بـ `422` ورسالة `This account is not active.`.
+6. `TokenService::issuePair` يصدر زوج التوكنات: Access Token (ساعة) + Refresh Token (30 يوماً، مخزَّن هاش SHA-256 فقط).
 
 ### 15.3 الأمان
 
@@ -454,7 +457,7 @@ readonly class RegisterUserDTO
 - **التسجيل لا يمنح صلاحيات:** `status` و `role` أُزيلا من `RegisterRequest` نهائياً — كان أي شخص يستطيع التسجيل كأدمن. الحساب الجديد يبدأ `suspended` و `customer`، والتسجيل لا يرجع توكن.
 - **الهاتف موحّد:** `PhoneNumber` يطبّع `+967777123456` و `0777123456` إلى `777123456` قبل التحقق والتخزين.
 
-### 15.4 المسارات (16)
+### 15.4 المسارات (19)
 
 | المسار | الحماية |
 |---|---|
@@ -462,15 +465,18 @@ readonly class RegisterUserDTO
 | `POST /api/login` | عام + throttle |
 | `POST /api/auth/refresh` | عام + throttle |
 | `POST /api/logout` | `auth:sanctum` |
+| `POST /api/logout-all` | `auth:sanctum` (يلغي كل الجلسات) |
 | `GET /api/me` ، `GET /api/user` | `auth:sanctum` + حساب نشط |
 | `apiResource /api/users` | `auth:sanctum` + حساب نشط + `role:admin` |
+| `PATCH /api/users/{user}/activate` | `auth:sanctum` + حساب نشط + `role:admin` |
+| `PATCH /api/users/{user}/suspend` | `auth:sanctum` + حساب نشط + `role:admin` |
 | `apiResource /api/customers` | `auth:sanctum` + حساب نشط |
 
 ### 15.5 الاختبارات
 
-- **23 اختباراً ناجحاً (88 تأكيداً):** 11 اختبار Users API + 7 اختبارات أمن (تدوير التوكن، إلغاء الجلسة، صلاحيات الأدمن، الحساب الموقوف، انتهاء التوكن) + 3 اختبارات Unit للـ ValueObjects + مثالان.
+- **26 اختباراً ناجحاً (99 تأكيداً):** 13 اختبار Users API (منها تفعيل/إيقاف المستخدم) + 8 اختبارات أمن (تدوير التوكن، إلغاء الجلسة، الخروج من كل الأجهزة، صلاحيات الأدمن، الحساب الموقوف، انتهاء التوكن) + 3 اختبارات Unit للـ ValueObjects + مثالان.
 - `php artisan test` ثم `php vendor/bin/pint --dirty` قبل أي رفع.
 
 ---
 
-*آخر تحديث: يطابق فرع `feature/strict-clean-architecture-security` — البنية الصارمة الكاملة (DTOs + ValueObjects + Entities + UseCases) مع نظام التوكنات المزدوج والـ middlewares. الـ main ما زال على `b723fc9` حتى دمج الـ PR.*
+*آخر تحديث: يطابق فرع `feature/strict-clean-architecture-security` — البنية الصارمة الكاملة (DTOs + ValueObjects + Entities + UseCases + Services المنسّقة) مع نظام التوكنات المزدوج والـ middlewares. الـ main ما زال على `b723fc9` حتى دمج الـ PR.*

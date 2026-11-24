@@ -14,13 +14,18 @@ Route::post('/auth/refresh', [AuthController::class, 'refresh'])->middleware('th
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
+    Route::post('/logout-all', [AuthController::class, 'logoutEverywhere']);
 
     Route::middleware('account.active')->group(function () {
         Route::get('/user', function (Request $request) {
             return new UserResource(UserEntity::fromModel($request->user()->load('customer')));
         });
         Route::get('/me', [AuthController::class, 'me']);
-        Route::middleware('role:admin')->apiResource('users', UserController::class);
+        Route::middleware('role:admin')->group(function () {
+            Route::apiResource('users', UserController::class);
+            Route::patch('/users/{user}/activate', [UserController::class, 'activate']);
+            Route::patch('/users/{user}/suspend', [UserController::class, 'suspend']);
+        });
         Route::apiResource('customers', CustomerController::class);
     });
 });
