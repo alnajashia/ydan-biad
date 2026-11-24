@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('status')->default('suspended');
             $table->string('identity_type');
             $table->string('identity_number')->unique();
-            $table->string('identity_front_image');//store the url
+            $table->string('identity_front_image'); // store the url
             $table->string('identity_back_image');
             $table->date('identity_expiry_date');
             $table->timestamp('account_verified_at')->nullable();

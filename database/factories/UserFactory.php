@@ -43,11 +43,33 @@ class UserFactory extends Factory
             'status' => UserStatus::Active,
             'identity_type' => fake()->randomElement(IdentityType::cases()),
             'identity_number' => fake()->unique()->numerify('##########'),
+            'identity_front_image' => 'identity/front.jpg',
+            'identity_back_image' => 'identity/back.jpg',
             'identity_expiry_date' => fake()->dateTimeBetween('+1 year', '+5 years')->format('Y-m-d'),
             'account_verified_at' => now(),
             'role' => UserRole::Customer,
             'remember_token' => Str::random(10),
         ];
+    }
+
+    /**
+     * Indicate that the user is an admin.
+     */
+    public function admin(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => UserRole::Admin,
+        ]);
+    }
+
+    /**
+     * Indicate that the user's account is suspended.
+     */
+    public function suspended(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => UserStatus::Suspended,
+        ]);
     }
 
     /**

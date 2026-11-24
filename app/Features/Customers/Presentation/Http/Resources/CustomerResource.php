@@ -17,19 +17,19 @@ class CustomerResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'user_id' => $this->user_id,
-            'phone_verification_code' => $this->phone_verification_code,
-            'phone_verified_at' => $this->phone_verified_at?->toISOString(),
-            'verification_code_sent_at' => $this->verification_code_sent_at?->toISOString(),
-            'verification_code_expires_at' => $this->verification_code_expires_at?->toISOString(),
+            'user_id' => $this->userId,
+            'phone_verification_code' => $this->phoneVerificationCode,
+            'phone_verified_at' => $this->phoneVerifiedAt?->format(DATE_ATOM),
+            'verification_code_sent_at' => $this->verificationCodeSentAt?->format(DATE_ATOM),
+            'verification_code_expires_at' => $this->verificationCodeExpiresAt?->format(DATE_ATOM),
             'city' => $this->city,
             'district' => $this->district,
-            'current_address' => $this->current_address,
-            'latitude' => $this->latitude,
-            'longitude' => $this->longitude,
-            'user' => new UserResource($this->whenLoaded('user')),
-            'created_at' => $this->created_at?->toISOString(),
-            'updated_at' => $this->updated_at?->toISOString(),
+            'current_address' => $this->currentAddress,
+            'latitude' => $this->coordinates?->latitude,
+            'longitude' => $this->coordinates?->longitude,
+            'user' => $this->user !== null ? new UserResource($this->user) : null,
+            'created_at' => $this->createdAt?->format(DATE_ATOM),
+            'updated_at' => $this->updatedAt?->format(DATE_ATOM),
         ];
     }
 }
