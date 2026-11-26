@@ -37,8 +37,8 @@ class EloquentUserRepository implements UserRepositoryInterface
         $model->refresh();
 
         $this->deleteReplacedImages($oldFrontImage, $oldBackImage, $model);
+        return UserMapper::toEntity($model);
 
-        return UserEntity::fromModel($model);
     }
 
     public function delete(UserEntity $user): bool
@@ -66,7 +66,8 @@ class EloquentUserRepository implements UserRepositoryInterface
             return null;
         }
 
-        return UserEntity::fromModel($model);
+        return UserMapper::toEntity($model);
+
     }
 
     public function findByPhone(PhoneNumber $phone): ?UserEntity
@@ -77,7 +78,7 @@ class EloquentUserRepository implements UserRepositoryInterface
             return null;
         }
 
-        return UserEntity::fromModel($model);
+        return UserMapper::toEntity($model);
     }
 
     public function findByCredentials(PhoneNumber $phone, string $password): ?UserEntity
@@ -88,7 +89,7 @@ class EloquentUserRepository implements UserRepositoryInterface
             return null;
         }
 
-        return UserEntity::fromModel($model);
+        return UserMapper::toEntity($model);
     }
 
     /**
@@ -111,7 +112,7 @@ class EloquentUserRepository implements UserRepositoryInterface
         $paginator = User::query()->with('customer')->latest()->paginate($perPage);
 
         $paginator->setCollection(
-            $paginator->getCollection()->map(fn (User $model): UserEntity => UserEntity::fromModel($model)),
+            $paginator->getCollection()->map(fn (User $model): UserEntity => UserMapper::toEntity($model)),
         );
 
         return $paginator;
