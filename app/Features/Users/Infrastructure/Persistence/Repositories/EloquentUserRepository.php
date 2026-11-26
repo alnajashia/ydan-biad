@@ -5,6 +5,7 @@ namespace App\Features\Users\Infrastructure\Persistence\Repositories;
 use App\Features\Users\Domain\Entities\UserEntity;
 use App\Features\Users\Domain\Repositories\UserRepositoryInterface;
 use App\Features\Users\Domain\ValueObjects\PhoneNumber;
+use App\Features\Users\Infrastructure\Persistence\Mappers\UserMapper;
 use App\Features\Users\Infrastructure\Persistence\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Hash;
@@ -19,8 +20,8 @@ class EloquentUserRepository implements UserRepositoryInterface
     public function create(array $data): UserEntity
     {
         $model = User::create($data);
-
-        return UserEntity::fromModel($model);
+        return UserMapper::toEntity($model);
+        // return UserEntity::fromModel($model);
     }
 
     /**
