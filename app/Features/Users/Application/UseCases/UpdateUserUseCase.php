@@ -13,7 +13,7 @@ class UpdateUserUseCase
         private readonly UserRepositoryInterface $users,
     ) {}
 
-    public function execute(UserEntity $user, UpdateUserDTO $dto): UserEntity
+    public function execute(int $userId, UpdateUserDTO $dto): UserEntity
     {
         $frontImage = $dto->identityFrontImage instanceof UploadedFile
             ? $this->storeImage($dto->identityFrontImage)
@@ -25,7 +25,7 @@ class UpdateUserUseCase
 
         $dto = $dto->withStoredImages($frontImage, $backImage);
 
-        return $this->users->update($user, $dto->toPersistenceArray());
+        return $this->users->update($userId, $dto->toPersistenceArray());
     }
 
     private function storeImage(UploadedFile $image): string

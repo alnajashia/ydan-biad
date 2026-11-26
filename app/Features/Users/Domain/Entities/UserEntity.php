@@ -8,7 +8,6 @@ use App\Features\Users\Domain\Enums\IdentityType;
 use App\Features\Users\Domain\Enums\UserRole;
 use App\Features\Users\Domain\Enums\UserStatus;
 use App\Features\Users\Domain\ValueObjects\PhoneNumber;
-use App\Features\Users\Infrastructure\Persistence\Models\User;
 use DateTimeImmutable;
 
 final readonly class UserEntity
@@ -54,31 +53,5 @@ final readonly class UserEntity
         return $this->isActive();
     }
 
-    // public static function fromModel(User $user): self
-    // {
-    //     // bool $withCustomer = true
-    //     // $customer = null;
-
-    //     // if ($withCustomer && $user->relationLoaded('customer') && $user->customer !== null) {
-    //     //     $customer = CustomerEntity::fromModel($user->customer, false);
-    //     // }//the user kind(like customer) should be embbeded in the usecase or service not here
-
-    //     return new self(
-    //         id: $user->id,
-    //         fullName: $user->full_name,
-    //         phone: PhoneNumber::fromString($user->phone),
-    //         gender: $user->gender,
-    //         status: $user->status,
-    //         identityType: $user->identity_type,
-    //         identityNumber: $user->identity_number,
-    //         identityFrontImage: $user->identity_front_image,
-    //         identityBackImage: $user->identity_back_image,
-    //         identityExpiryDate: $user->identity_expiry_date->toDateTimeImmutable(),
-    //         accountVerifiedAt: $user->account_verified_at?->toDateTimeImmutable(),
-    //         role: $user->role,
-    //         // customer: $customer,
-    //         createdAt: $user->created_at?->toDateTimeImmutable(),
-    //         updatedAt: $user->updated_at?->toDateTimeImmutable(),
-    //     );
-    // }
+  
 }

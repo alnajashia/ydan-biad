@@ -7,7 +7,6 @@ use App\Features\Users\Domain\Enums\IdentityType;
 use App\Features\Users\Domain\Enums\UserRole;
 use App\Features\Users\Domain\Enums\UserStatus;
 use App\Features\Users\Domain\ValueObjects\PhoneNumber;
-use App\Features\Users\Presentation\Http\Requests\StoreUserRequest;
 use DateTimeImmutable;
 use Illuminate\Http\UploadedFile;
 
@@ -28,20 +27,20 @@ final readonly class CreateUserDTO
         public UserRole $role = UserRole::Customer,
     ) {}
 
-    public static function fromRequest(StoreUserRequest $request): self
+    public static function toDto(array $data): self
     {
-        $validated = $request->validated();
+      
 
         return new self(
-            fullName: $validated['full_name'],
-            phone: PhoneNumber::fromString($validated['phone']),
-            password: $validated['password'],
-            gender: Gender::from($validated['gender']),
-            identityType: IdentityType::from($validated['identity_type']),
-            identityNumber: $validated['identity_number'],
-            identityFrontImage: $validated['identity_front_image'],
-            identityBackImage: $validated['identity_back_image'],
-            identityExpiryDate: new DateTimeImmutable($validated['identity_expiry_date']),
+            fullName: $data['full_name'],
+            phone: PhoneNumber::fromString($data['phone']),
+            password: $data['password'],
+            gender: Gender::from($data['gender']),
+            identityType: IdentityType::from($data['identity_type']),
+            identityNumber: $data['identity_number'],
+            identityFrontImage: $data['identity_front_image'],
+            identityBackImage: $data['identity_back_image'],
+            identityExpiryDate: new DateTimeImmutable($data['identity_expiry_date']),
             status: isset($validated['status']) ? UserStatus::from($validated['status']) : UserStatus::Suspended,
             accountVerifiedAt: isset($validated['account_verified_at']) ? new DateTimeImmutable($validated['account_verified_at']) : null,
             role: isset($validated['role']) ? UserRole::from($validated['role']) : UserRole::Customer,

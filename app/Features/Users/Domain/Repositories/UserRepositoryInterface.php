@@ -16,9 +16,9 @@ interface UserRepositoryInterface
     /**
      * @param  array<string, mixed>  $data
      */
-    public function update(UserEntity $user, array $data): UserEntity;
+    public function update(int $userId, array $data): UserEntity;
 
-    public function delete(UserEntity $user): bool;
+    public function delete(int $userId): bool;
 
     public function findById(int $id): ?UserEntity;
 

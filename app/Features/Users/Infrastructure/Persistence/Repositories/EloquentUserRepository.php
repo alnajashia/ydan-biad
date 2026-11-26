@@ -21,15 +21,14 @@ class EloquentUserRepository implements UserRepositoryInterface
     {
         $model = User::create($data);
         return UserMapper::toEntity($model);
-        // return UserEntity::fromModel($model);
     }
 
     /**
      * @param  array<string, mixed>  $data
      */
-    public function update(UserEntity $user, array $data): UserEntity
+    public function update(int $userId, array $data): UserEntity
     {
-        $model = User::findOrFail($user->id);
+        $model = User::findOrFail($userId);
         $oldFrontImage = $model->identity_front_image;
         $oldBackImage = $model->identity_back_image;
 
@@ -41,15 +40,15 @@ class EloquentUserRepository implements UserRepositoryInterface
 
     }
 
-    public function delete(UserEntity $user): bool
+    public function delete(int $userId): bool
     {
-        $model = User::query()->find($user->id);
+        $model = User::query()->find($userId);
 
         if ($model === null) {
             return false;
         }
 
-        $this->revokeAllAccessTokens($user->id);
+        $this->revokeAllAccessTokens($userId);
         Storage::disk('public')->delete(array_filter([
             $model->identity_front_image,
             $model->identity_back_image,

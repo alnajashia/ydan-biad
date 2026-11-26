@@ -7,7 +7,6 @@ use App\Features\Users\Domain\Enums\IdentityType;
 use App\Features\Users\Domain\Enums\UserRole;
 use App\Features\Users\Domain\Enums\UserStatus;
 use App\Features\Users\Domain\ValueObjects\PhoneNumber;
-use App\Features\Users\Presentation\Http\Requests\UpdateUserRequest;
 use DateTimeImmutable;
 use Illuminate\Http\UploadedFile;
 
@@ -28,23 +27,22 @@ final readonly class UpdateUserDTO
         public ?UserRole $role = null,
     ) {}
 
-    public static function fromRequest(UpdateUserRequest $request): self
+    public static function toDto(array $data): self
     {
-        $validated = $request->validated();
 
         return new self(
-            fullName: $validated['full_name'] ?? null,
-            phone: isset($validated['phone']) ? PhoneNumber::fromString($validated['phone']) : null,
-            password: $validated['password'] ?? null,
-            gender: isset($validated['gender']) ? Gender::from($validated['gender']) : null,
-            status: isset($validated['status']) ? UserStatus::from($validated['status']) : null,
-            identityType: isset($validated['identity_type']) ? IdentityType::from($validated['identity_type']) : null,
-            identityNumber: $validated['identity_number'] ?? null,
-            identityFrontImage: $validated['identity_front_image'] ?? null,
-            identityBackImage: $validated['identity_back_image'] ?? null,
-            identityExpiryDate: isset($validated['identity_expiry_date']) ? new DateTimeImmutable($validated['identity_expiry_date']) : null,
-            accountVerifiedAt: isset($validated['account_verified_at']) ? new DateTimeImmutable($validated['account_verified_at']) : null,
-            role: isset($validated['role']) ? UserRole::from($validated['role']) : null,
+            fullName: $data['full_name'] ?? null,
+            phone: isset($data['phone']) ? PhoneNumber::fromString($data['phone']) : null,
+            password: $data['password'] ?? null,
+            gender: isset($data['gender']) ? Gender::from($data['gender']) : null,
+            status: isset($data['status']) ? UserStatus::from($data['status']) : null,
+            identityType: isset($data['identity_type']) ? IdentityType::from($data['identity_type']) : null,
+            identityNumber: $data['identity_number'] ?? null,
+            identityFrontImage: $data['identity_front_image'] ?? null,
+            identityBackImage: $data['identity_back_image'] ?? null,
+            identityExpiryDate: isset($data['identity_expiry_date']) ? new DateTimeImmutable($data['identity_expiry_date']) : null,
+            accountVerifiedAt: isset($data['account_verified_at']) ? new DateTimeImmutable($data['account_verified_at']) : null,
+            role: isset($data['role']) ? UserRole::from($data['role']) : null,
         );
     }
 

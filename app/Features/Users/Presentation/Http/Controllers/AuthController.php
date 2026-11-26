@@ -5,7 +5,6 @@ namespace App\Features\Users\Presentation\Http\Controllers;
 use App\Features\Users\Application\DTOs\LoginDTO;
 use App\Features\Users\Application\DTOs\RegisterUserDTO;
 use App\Features\Users\Application\Services\AuthService;
-use App\Features\Users\Domain\Entities\UserEntity;
 use App\Features\Users\Presentation\Http\Requests\LoginRequest;
 use App\Features\Users\Presentation\Http\Requests\RefreshTokenRequest;
 use App\Features\Users\Presentation\Http\Requests\RegisterRequest;
@@ -33,7 +32,8 @@ class AuthController extends Controller
 
     public function login(LoginRequest $request): JsonResponse
     {
-        $result = $this->authService->login(LoginDTO::fromRequest($request));
+         $validated = $request->validated();
+        $result = $this->authService->login(LoginDTO::toDto($validated));
 
         return response()->json([
             'user' => new UserResource($result['user']),
@@ -46,7 +46,8 @@ class AuthController extends Controller
 
     public function refresh(RefreshTokenRequest $request): JsonResponse
     {
-        $result = $this->authService->refresh($request->validated('refresh_token'));
+        $validated=$request->validated('refresh_token');
+        $result = $this->authService->refresh($validated);
 
         return response()->json([
             'user' => new UserResource($result['user']),
@@ -57,23 +58,20 @@ class AuthController extends Controller
         ]);
     }
 
-    public function me(Request $request): JsonResponse
-    {
-        return response()->json([
-            'user' => new UserResource(UserEntity::fromModel($request->user()->load('customer'))),
-        ]);
-    }
+   
 
     public function logout(Request $request): JsonResponse
     {
-        $this->authService->logout($request->user()->currentAccessToken()?->id);
+        $id = $request->user()->currentAccessToken()?->id;
+        $this->authService->logout($id);
 
         return response()->json(['message' => 'Logged out.']);
     }
 
     public function logoutEverywhere(Request $request): JsonResponse
     {
-        $this->authService->logoutEverywhere($request->user()->id);
+        $id =$request->user()->id;
+        $this->authService->logoutEverywhere($id);
 
         return response()->json(['message' => 'Logged out from all devices.']);
     }

@@ -5,7 +5,6 @@ namespace App\Features\Users\Presentation\Http\Controllers;
 use App\Features\Users\Application\DTOs\CreateUserDTO;
 use App\Features\Users\Application\DTOs\UpdateUserDTO;
 use App\Features\Users\Application\Services\UserService;
-use App\Features\Users\Domain\Entities\UserEntity;
 use App\Features\Users\Infrastructure\Persistence\Models\User;
 use App\Features\Users\Presentation\Http\Requests\StoreUserRequest;
 use App\Features\Users\Presentation\Http\Requests\UpdateUserRequest;
@@ -30,7 +29,8 @@ class UserController extends Controller
 
     public function store(StoreUserRequest $request): JsonResponse
     {
-        $user = $this->userService->create(CreateUserDTO::fromRequest($request));
+          $validated = $request->validated();
+        $user = $this->userService->create(CreateUserDTO::toDto($validated));
 
         return response()->json(['user' => new UserResource($user)], 201);
     }
@@ -46,30 +46,32 @@ class UserController extends Controller
         return response()->json(['user' => new UserResource($entity)]);
     }
 
-    public function update(UpdateUserRequest $request, User $user): JsonResponse
+    public function update(UpdateUserRequest $request, int $userId): JsonResponse
     {
-        $updated = $this->userService->update(UserEntity::fromModel($user), UpdateUserDTO::fromRequest($request));
+        $validated = $request->validated();
+
+        $updated = $this->userService->update($userId, UpdateUserDTO::toDto($validated));
 
         return response()->json(['user' => new UserResource($updated)]);
     }
 
-    public function destroy(User $user): JsonResponse
+    public function destroy(int $userId): JsonResponse
     {
-        $this->userService->delete(UserEntity::fromModel($user));
+        $this->userService->delete($userId);
 
         return response()->json(['message' => 'User deleted.']);
     }
 
-    public function activate(User $user): JsonResponse
+    public function activate(int $userId): JsonResponse
     {
-        $activated = $this->userService->activate(UserEntity::fromModel($user));
+        $activated = $this->userService->activate($userId);
 
         return response()->json(['user' => new UserResource($activated)]);
     }
 
-    public function suspend(User $user): JsonResponse
+    public function suspend(int $userId): JsonResponse
     {
-        $suspended = $this->userService->suspend(UserEntity::fromModel($user));
+        $suspended = $this->userService->suspend($userId);
 
         return response()->json(['user' => new UserResource($suspended)]);
     }

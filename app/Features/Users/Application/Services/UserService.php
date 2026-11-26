@@ -41,29 +41,29 @@ class UserService
         return $this->createUser->execute($dto);
     }
 
-    public function update(UserEntity $user, UpdateUserDTO $dto): UserEntity
+    public function update(int $userId, UpdateUserDTO $dto): UserEntity
     {
-        return $this->updateUser->execute($user, $dto);
+        return $this->updateUser->execute($userId, $dto);
     }
 
-    public function delete(UserEntity $user): bool
+    public function delete(int $userId): bool
     {
-        return $this->deleteUser->execute($user);
+        return $this->deleteUser->execute($userId);
     }
 
     /**
      * Activate a suspended account so it can log in again.
      */
-    public function activate(UserEntity $user): UserEntity
+    public function activate(int $userId): UserEntity
     {
-        return $this->updateUser->execute($user, new UpdateUserDTO(status: UserStatus::Active));
+        return $this->updateUser->execute($userId, new UpdateUserDTO(status: UserStatus::Active));
     }
 
     /**
      * Suspend an account: it can no longer log in or use the API.
      */
-    public function suspend(UserEntity $user): UserEntity
+    public function suspend(int $userId): UserEntity
     {
-        return $this->updateUser->execute($user, new UpdateUserDTO(status: UserStatus::Suspended));
+        return $this->updateUser->execute($userId, new UpdateUserDTO(status: UserStatus::Suspended));
     }
 }

@@ -2,7 +2,6 @@
 
 namespace App\Features\Users\Application\UseCases;
 
-use App\Features\Users\Domain\Entities\UserEntity;
 use App\Features\Users\Domain\Repositories\UserRepositoryInterface;
 
 class DeleteUserUseCase
@@ -11,8 +10,8 @@ class DeleteUserUseCase
         private readonly UserRepositoryInterface $users,
     ) {}
 
-    public function execute(UserEntity $user): bool
+    public function execute(int $userId): bool
     {
-        return $this->users->delete($user);
+        return $this->users->delete($userId);
     }
 }
