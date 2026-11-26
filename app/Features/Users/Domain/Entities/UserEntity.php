@@ -54,13 +54,14 @@ final readonly class UserEntity
         return $this->isActive();
     }
 
-    public static function fromModel(User $user, bool $withCustomer = true): self
+    public static function fromModel(User $user): self
     {
-        $customer = null;
+        // bool $withCustomer = true
+        // $customer = null;
 
-        if ($withCustomer && $user->relationLoaded('customer') && $user->customer !== null) {
-            $customer = CustomerEntity::fromModel($user->customer, false);
-        }
+        // if ($withCustomer && $user->relationLoaded('customer') && $user->customer !== null) {
+        //     $customer = CustomerEntity::fromModel($user->customer, false);
+        // }//the user kind(like customer) should be embbeded in the usecase or service not here
 
         return new self(
             id: $user->id,
@@ -75,7 +76,7 @@ final readonly class UserEntity
             identityExpiryDate: $user->identity_expiry_date->toDateTimeImmutable(),
             accountVerifiedAt: $user->account_verified_at?->toDateTimeImmutable(),
             role: $user->role,
-            customer: $customer,
+            // customer: $customer,
             createdAt: $user->created_at?->toDateTimeImmutable(),
             updatedAt: $user->updated_at?->toDateTimeImmutable(),
         );

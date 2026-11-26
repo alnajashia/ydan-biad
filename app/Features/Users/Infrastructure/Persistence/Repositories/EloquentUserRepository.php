@@ -18,9 +18,9 @@ class EloquentUserRepository implements UserRepositoryInterface
      */
     public function create(array $data): UserEntity
     {
-        $model = User::query()->create($data);
+        $model = User::create($data);
 
-        return UserEntity::fromModel($model->refresh());
+        return UserEntity::fromModel($model);
     }
 
     /**
@@ -28,7 +28,7 @@ class EloquentUserRepository implements UserRepositoryInterface
      */
     public function update(UserEntity $user, array $data): UserEntity
     {
-        $model = User::query()->findOrFail($user->id);
+        $model = User::findOrFail($user->id);
         $oldFrontImage = $model->identity_front_image;
         $oldBackImage = $model->identity_back_image;
 

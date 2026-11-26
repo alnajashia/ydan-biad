@@ -5,7 +5,6 @@ namespace App\Features\Users\Application\DTOs;
 use App\Features\Users\Domain\Enums\Gender;
 use App\Features\Users\Domain\Enums\IdentityType;
 use App\Features\Users\Domain\ValueObjects\PhoneNumber;
-use App\Features\Users\Presentation\Http\Requests\RegisterRequest;
 use DateTimeImmutable;
 use Illuminate\Http\UploadedFile;
 
